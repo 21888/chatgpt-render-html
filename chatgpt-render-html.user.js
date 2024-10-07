@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT 渲染HTML代码
 // @namespace    https://github.com/21888/chatgpt-render-html
-// @version      202410071345
+// @version      1.0.2
 // @description  chatgpt渲染html代码块,像Claude一样实时预览html ( chatgpt renders HTML code blocks, previewing HTML in real-time like Claude )
 // @author       chabai
 // @match        https://chatgpt.com/c/*
