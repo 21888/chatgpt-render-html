@@ -1,9 +1,8 @@
 // ==UserScript==
 // @name         ChatGPT 渲染HTML代码
 // @namespace    https://github.com/21888/chatgpt-render-html
-// @version      1.0.2
+// @version      1.0.3
 // @description  chatgpt渲染html代码块,像Claude一样实时预览html ( chatgpt renders HTML code blocks, previewing HTML in real-time like Claude )
-// @author       chabai
 // @match        https://chatgpt.com/c/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=chatgpt.com
 // @grant        none
@@ -13,11 +12,16 @@
     "use strict";
     // 使用 MutationObserver 监听 DOM 变化
     const observer = new MutationObserver(debounce(xuanranHTML, 500));
-    const createIframeObserver = new MutationObserver(debounce(createIframe, 500));
+    const createIframeObserver = new MutationObserver(
+        debounce(createIframe, 500)
+    );
 
     // 观察目标节点的变化
     observer.observe(document.body, { childList: true, subtree: true });
-    createIframeObserver.observe(document.body, { childList: true, subtree: true });
+    createIframeObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+    });
 
     // 首次调用渲染
     window.addEventListener("load", () => {
@@ -45,7 +49,9 @@ function createIframe() {
         iframe.style.width = "100%";
         iframe.style.height = "100%";
         iframe.style.backgroundColor = "#FFFDF6"; // 添加奶白色背景
-
+        // sandbox="allow-scripts"
+        iframe.sandbox = "allow-scripts";
+        iframe.srcdoc = "<html><body></body></html>";
         // 创建切换显示代码块的div
         const toggleCodeButton = document.createElement("div");
         toggleCodeButton.id = "toggleCodeButton";
@@ -253,11 +259,14 @@ function renderSmallWindow(codeElement) {
             document.getElementById("dynamicContentIframe"),
             codeElement.textContent
         );
+        // 拦截script标签
+
         // 设置代码容器代码
         // document.getElementById("codeContainer").innerHTML = codeElement.parentNode.parentNode.innerHTML;
         const codeContainer = document.getElementById("codeContainer");
         codeContainer.innerHTML = "";
         const clonedContent = codeElement.parentNode.parentNode.cloneNode(true);
+
         codeContainer.appendChild(clonedContent);
         codeContainer.childNodes[0].style.display = "contents";
 
@@ -307,15 +316,58 @@ function renderSmallWindow(codeElement) {
     return componentContainer;
 }
 function renderIframeContent(iframe, content) {
+    // console.log(__remixContext.state.loaderData.root.cspScriptNonce);
+    // Add nonce to script tags in content
+    const nonce = __remixContext.state.loaderData.root.cspScriptNonce;
+    content = content.replace(/<script/g, `<script nonce="${nonce}"`);
+    iframe.srcdoc = content;
+    return;
     // 获取 iframe 内部的 document 对象
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
     // 将 code 元素的内容设置为 iframe 的内容
     iframeDoc.open();
+
     if (true) {
         // 刷新特效,true为有感刷新,!true为无痕刷新
-        iframeDoc.write(`loading`);
-        setTimeout(() => iframeDoc.write(content), 100);
+        // iframeDoc.write(`loading`);
+        // 生成一个随机的nonce值
+        const nonce = generateNonce();
+
+        // 在content中添加nonce
+        // content = content.replace(/<script/g, `<script nonce="${nonce}"`);
+        // 设置meta头替换
+        // content = content.replace(/<meta/g, `<meta nonce="${nonce}"`);
+        // let doms = new DOMParser().parseFromString(content, "text/html");
+
+        // Remove script tags from content
+        // content = content.replace(
+        //     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+        //     ""
+        // );
+        // 插入
+        iframeDoc.write(content);
+        doms.querySelectorAll("script").forEach((script) => {
+            return;
+            console.log("script");
+            const newScript = iframeDoc.createElement("script");
+            newScript.textContent = script.textContent;
+            newScript.nonce = nonce;
+            // iframeDoc.documentElement.appendChild(newScript);
+            // 创建一个blob URL来加载脚本
+            const blob = new Blob([script.textContent], {
+                type: "application/javascript",
+            });
+            const scriptUrl = URL.createObjectURL(blob);
+            newScript.src = scriptUrl;
+            script.onload = () => {
+                console.log("加载完成");
+                URL.revokeObjectURL(scriptUrl);
+            };
+            iframeDoc.documentElement.appendChild(newScript);
+        });
+
+        // setTimeout(() => iframeDoc.write(content), 100);
     } else {
         iframeDoc.write(content);
     }
@@ -330,4 +382,10 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(context, args), wait);
     };
+}
+function generateNonce() {
+    return (
+        Math.random().toString(36).substring(2, 15) +
+        Math.random().toString(36).substring(2, 15)
+    );
 }

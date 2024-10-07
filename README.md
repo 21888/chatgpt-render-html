@@ -12,3 +12,7 @@ chatgpt渲染html代码块,像Claude一样实时预览html ( chatgpt renders HTM
 ![Preview](./image1.png)
 ![Preview](./image2.png)
 
+## 更新记录
+
+### 2024-10-07 1.0.3版本
+- 处理CSP限制增加nonce属性到script上, 注意: 要让gpt使用addEventListener添加事件
