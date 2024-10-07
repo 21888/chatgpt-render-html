@@ -1,5 +1,5 @@
 # chatgpt-render-html
-chatgpt渲染html代码块,像Claude一样实时预览html ( chatgpt renders HTML code blocks, previewing HTML in real-time like Claude )
+chatgpt渲染预览html代码,像Claude一样实时预览html ( chatgpt renders preview HTML code blocks, previewing HTML in real-time like Claude )
 
 
 ## 使用方法
@@ -16,3 +16,4 @@ chatgpt渲染html代码块,像Claude一样实时预览html ( chatgpt renders HTM
 
 ### 2024-10-07 1.0.3版本
 - 处理CSP限制增加nonce属性到script上, 注意: 要让gpt使用addEventListener添加事件
+- 使用srcdoc属性提高性能和安全性
